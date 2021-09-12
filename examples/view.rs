@@ -20,7 +20,7 @@ fn main() -> Result<()> {
     println!("File type: {}", format_fourcc(file.file_type()));
     println!("File size: {}", file.file_size());
 
-    let entries = file.read_root()?;
+    let entries = file.read_entries()?;
     for entry in &entries {
         show_entry(entry, 0)?;
     }
@@ -32,7 +32,12 @@ fn show_entry(entry: &Entry, indent: usize) -> Result<()> {
     print!("{}", String::from("  ").repeat(indent));
     match entry {
         Entry::Chunk(chunk) => {
-            println!("CHUNK '{}'", format_fourcc(&chunk.chunk_id));
+            println!(
+                "CHUNK '{}' offset={} size={}",
+                format_fourcc(&chunk.chunk_id),
+                chunk.data_offset,
+                chunk.chunk_size
+            );
         }
         Entry::List(list) => {
             println!("LIST '{}'", format_fourcc(&list.list_type));

@@ -29,26 +29,23 @@ cargo run --example view example.AVI
 Sample output:
 
 ```text,no_run
-File type: AVI 
-File size: 168081400
 LIST 'hdrl'
-  CHUNK 'avih'
+  CHUNK 'avih' offset=32 size=56
   LIST 'strl'
-    CHUNK 'strh'
-    CHUNK 'strf'
-    CHUNK 'indx'
-  CHUNK ''
-CHUNK ''
-CHUNK ''
+    CHUNK 'strh' offset=108 size=56
+    CHUNK 'strf' offset=172 size=1064
+    CHUNK 'indx' offset=1244 size=32248
+  LIST 'odml'
+    CHUNK 'dmlh' offset=33512 size=248
+CHUNK 'JUNK' offset=33768 size=12
 LIST 'movi'
-  CHUNK 'ix00'
-  CHUNK '00db'
-  CHUNK 'JUNK'
-  CHUNK '00db'
+  CHUNK 'ix00' offset=33800 size=32248
+  CHUNK '00db' offset=66056 size=3818112
+  CHUNK 'JUNK' offset=3884176 size=368
   ...
-  CHUNK 'JUNK'
-  CHUNK '00db'
-CHUNK '[f8, 5, 0, 0]'
+  CHUNK '00db' offset=164261384 size=3818112
+  CHUNK 'JUNK' offset=168079504 size=368
+CHUNK 'idx1' offset=168079880 size=1528
 ```
 
 ## Resources
