@@ -1,5 +1,7 @@
 # riff-io
 
+[![crates.io](https://img.shields.io/crates/v/riff-io.svg)](https://crates.io/crates/riff-io)
+
 Rust crate for reading [Resource Interchange File Format](https://en.wikipedia.org/wiki/Resource_Interchange_File_Format) (RIFF) files.
 
 ## Features
