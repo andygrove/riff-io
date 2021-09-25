@@ -18,7 +18,7 @@ const RIFF: FourCC = [0x52, 0x49, 0x46, 0x46];
 const LIST: FourCC = [0x4c, 0x49, 0x53, 0x54];
 
 /// Entry in a RIFF file, which can be a list or a chunk of data. Lists can be nested
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub enum Entry {
     /// List can contain lists and chunks
     List(ListMeta),
@@ -27,7 +27,7 @@ pub enum Entry {
 }
 
 /// Meta-data for a list
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct ListMeta {
     /// four-character code list type
     pub list_type: FourCC,
@@ -40,7 +40,7 @@ pub struct ListMeta {
 }
 
 /// Meta-data for a chunk of data
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct ChunkMeta {
     /// four-character code chunk id
     pub chunk_id: FourCC,
