@@ -6,7 +6,7 @@ authors = ["Andy Grove <andygrove73@gmail.com>"]
 repository = "https://github.com/andygrove/riff-io"
 keywords = ["riff"]
 readme = "README.md"
-version = "0.1.1"
+version = "0.1.2"
 edition = "2018"
 
 [dependencies]
