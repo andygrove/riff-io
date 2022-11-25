@@ -6,7 +6,7 @@ use std::io::ErrorKind;
 use std::io::{Error, Result};
 use std::ops::Range;
 
-use memmap::{Mmap, MmapOptions};
+use memmap2::{Mmap, MmapOptions};
 
 /// Four-character code
 pub type FourCC = [u8; 4];
