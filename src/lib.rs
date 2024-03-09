@@ -1,5 +1,7 @@
 #![doc = include_str!("../README.md")]
 
+mod writer;
+
 use std::fs::File;
 use std::io::ErrorKind;
 use std::io::{Error, Result};
@@ -38,6 +40,8 @@ impl Entry<DataRef> {
 /// Meta-data for a list
 #[derive(Debug, Clone)]
 pub struct List<T> {
+    /// Container type
+    pub fourcc: FourCC,
     /// four-character code list type
     pub list_type: FourCC,
     pub data: T,
@@ -48,6 +52,7 @@ pub struct List<T> {
 impl List<DataRef> {
     fn to_owned(self, map: &[u8]) -> List<DataOwned> {
         List {
+            fourcc: self.fourcc,
             list_type: self.list_type,
             children: self.children.into_iter().map(|c| c.to_owned(map)).collect(),
             data: self.data.to_owned(map),
@@ -71,22 +76,22 @@ impl DataRef {
 }
 
 #[derive(Debug, Clone)]
-pub struct DataOwned(Vec<u8>);
+pub struct DataOwned(pub Vec<u8>);
 
 /// A chunk of data
 #[derive(Debug, Clone)]
 pub struct Chunk<T> {
     /// four-character code chunk id
-    pub chunk_id: FourCC,
+    pub id: FourCC,
     pub data: T,
-    /// length of chunk, in bytes, which can be smaller than data size due to padding
+    /// length of chunk, in bytes, which can be larger than data size due to padding
     pub chunk_size: usize,
 }
 
 impl Chunk<DataRef> {
     fn to_owned(self, map: &[u8]) -> Chunk<DataOwned> {
         Chunk {
-            chunk_id: self.chunk_id,
+            id: self.id,
             chunk_size: self.chunk_size,
             data: self.data.to_owned(map),
         }
@@ -167,6 +172,10 @@ impl RiffFile {
     pub fn read_bytes(&self, range: Range<usize>) -> &[u8] {
         &self.mmap[range]
     }
+    
+    pub fn bytes(&self) -> &[u8] {
+        &self.mmap[..]
+    }
 
     fn read_entry(&self, offset: usize) -> Result<Entry<DataRef>> {
         // read fourCC and size
@@ -195,7 +204,7 @@ impl RiffFile {
         let list_type = parse_fourcc(&header[0..4]);
 
         // The value of list_size includes the size of list_type plus the
-        // size of list_data; it does not include the 'LIST' FourCC or the size of list_ize.
+        // size of list_data; it does not include the 'LIST' FourCC or the size of list_size.
         let data_size = list_size - 4;
 
         let mut children = vec![];
@@ -211,6 +220,7 @@ impl RiffFile {
         }
 
         Ok(Entry::List(List::<DataRef> {
+            fourcc: *b"LIST",
             list_type,
             data: DataRef { offset: data_offset, size: data_size },
             children,
@@ -233,7 +243,7 @@ impl RiffFile {
 
         Ok(Entry::Chunk(Chunk::<DataRef> {
             data: DataRef { offset, size: data_size},
-            chunk_id,
+            id: chunk_id,
             chunk_size,
         }))
     }
