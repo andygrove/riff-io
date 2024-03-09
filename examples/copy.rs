@@ -6,7 +6,7 @@ use std::process::exit;
 
 use std::fs::File;
 
-use riff_io::{RiffFile, Entry, List, DataOwned};
+use riff_io::RiffFile;
 
 fn main() -> Result<()> {
     if env::args().len() < 2 {
@@ -20,14 +20,8 @@ fn main() -> Result<()> {
     let file = RiffFile::open(&filename_src)?;
     let mut outfile = File::create(&filename_dst)?;
 
-    let entries = file.read_entries()?;
-    let toplevel = Entry::<DataOwned>::List(List {
-        fourcc: *b"RIFF",
-        list_type: *b"AVI ",
-        children: entries.into_iter()
-            .map(|e| e.to_owned(file.bytes())).collect(),
-    });
-    toplevel.write(&mut outfile)?;
+    let toplevel = file.read_file()?;
+    toplevel.to_owned(file.bytes()).write(&mut outfile)?;
 
     Ok(())
 }
