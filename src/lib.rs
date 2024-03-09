@@ -195,7 +195,7 @@ impl RiffFile {
         self.data_size
     }
 
-    pub fn read_entries(&self) -> Result<Vec<Entry<DataRef>>> {
+    fn read_entries(&self) -> Result<Vec<Entry<DataRef>>> {
         let mut pos = 12;
         let mut entries = vec![];
         let end = pos + self.data_size - 4;
@@ -207,7 +207,7 @@ impl RiffFile {
         Ok(entries)
     }
 
-    pub fn read_bytes(&self, range: Range<usize>) -> &[u8] {
+    fn read_bytes(&self, range: Range<usize>) -> &[u8] {
         &self.mmap[range]
     }
     
@@ -258,27 +258,12 @@ impl RiffFile {
             children.push(entry);
         }
         
-        let l = Entry::List(List::<DataRef> {
+        Ok((
+            Entry::List(List::<DataRef> {
                 fourcc,
                 list_type,
                 children,
-            });
-    
-        
-        //if list_size != l.clone().to_owned(self.bytes()).bytes_len() {
-            let l = l.clone();/*
-            dbg!(&l);
-            if let Entry::List(l) = &l{
-            for c in &l.children {
-                dbg!(c.bytes_len());
-            }}*/
-            //panic!();
-        //}
-if list_size == 4600 {
-//            panic!();
-        }
-        Ok((
-            l,
+            }),
             end,
         ))
     }
