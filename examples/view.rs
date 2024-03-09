@@ -34,7 +34,7 @@ fn show_entry(entry: &Entry<DataRef>, indent: usize) -> Result<()> {
         Entry::Chunk(chunk) => {
             println!(
                 "CHUNK '{}' offset={} size={}",
-                format_fourcc(&chunk.chunk_id),
+                format_fourcc(&chunk.id),
                 chunk.data.offset,
                 chunk.chunk_size
             );
