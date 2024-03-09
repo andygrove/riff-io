@@ -40,7 +40,7 @@ fn show_entry(entry: &Entry<DataRef>, indent: usize) -> Result<()> {
             );
         }
         Entry::List(list) => {
-            println!("LIST '{}'", format_fourcc(&list.list_type));
+            println!("LIST '{}', size={}", format_fourcc(&list.list_type), list.bytes_len());
             for entry in &list.children {
                 show_entry(entry, indent + 1)?;
             }
