@@ -18,37 +18,42 @@ const LIST: FourCC = [0x4c, 0x49, 0x53, 0x54];
 
 /// Entry in a RIFF file, which can be a list or a chunk of data. Lists can be nested
 #[derive(Debug, Clone)]
-pub enum Entry {
+pub enum Entry<T> {
     /// List can contain lists and chunks
-    List(ListMeta),
+    List(List<T>),
     /// Chunks are leaf nodes
-    Chunk(ChunkMeta),
+    Chunk(Chunk<T>),
 }
 
 /// Meta-data for a list
 #[derive(Debug, Clone)]
-pub struct ListMeta {
+pub struct List<T> {
     /// four-character code list type
     pub list_type: FourCC,
-    /// offset of data, in bytes
-    pub data_offset: usize,
-    /// length of data, in bytes
-    pub data_size: usize,
+    pub data: T,
     /// child entries, which can be a mix of lists and chunks
-    pub children: Vec<Entry>,
+    pub children: Vec<Entry<T>>,
 }
 
-/// Meta-data for a chunk of data
 #[derive(Debug, Clone)]
-pub struct ChunkMeta {
+pub struct DataRef {
+    /// offset of data, in bytes
+    pub offset: usize,
+    /// length of data, in bytes
+    pub size: usize,
+}
+
+#[derive(Debug, Clone)]
+pub struct DataOwned(Vec<u8>);
+
+/// A chunk of data
+#[derive(Debug, Clone)]
+pub struct Chunk<T> {
     /// four-character code chunk id
     pub chunk_id: FourCC,
-    /// offset of data
-    pub data_offset: usize,
-    /// length of data, in bytes
+    pub data: T,
+    /// length of chunk, in bytes, which can be smaller than data size due to padding
     pub chunk_size: usize,
-    /// Number of data bytes, which can be greater than chunk_size due to padding
-    pub data_size: usize,
 }
 
 /// RIFF file
@@ -106,15 +111,15 @@ impl RiffFile {
         self.file_size
     }
 
-    pub fn read_entries(&self) -> Result<Vec<Entry>> {
+    pub fn read_entries(&self) -> Result<Vec<Entry<DataRef>>> {
         let mut pos = 12;
         let mut entries = vec![];
         let end = pos + self.file_size - 4;
         while pos < end {
             let entry = self.read_entry(pos)?;
             pos = match &entry {
-                Entry::List(list) => list.data_offset + list.data_size,
-                Entry::Chunk(chunk) => chunk.data_offset + chunk.data_size,
+                Entry::List(list) => list.data.offset + list.data.size,
+                Entry::Chunk(chunk) => chunk.data.offset + chunk.data.size,
             };
             entries.push(entry);
         }
@@ -125,7 +130,7 @@ impl RiffFile {
         &self.mmap[range]
     }
 
-    fn read_entry(&self, offset: usize) -> Result<Entry> {
+    fn read_entry(&self, offset: usize) -> Result<Entry<DataRef>> {
         // read fourCC and size
         let header = &self.mmap[offset..offset + 8];
         let pos = offset + 8_usize;
@@ -139,7 +144,7 @@ impl RiffFile {
         }
     }
 
-    fn read_list(&self, offset: usize, list_size: usize) -> Result<Entry> {
+    fn read_list(&self, offset: usize, list_size: usize) -> Result<Entry<DataRef>> {
         // 'LIST' listSize listType [listData]
 
         // Where 'LIST' is the literal FourCC code 'LIST', list_Size is a 4-byte value giving
@@ -161,21 +166,20 @@ impl RiffFile {
         while pos < end {
             let entry = self.read_entry(pos)?;
             pos = match &entry {
-                Entry::List(list) => list.data_offset + list.data_size,
-                Entry::Chunk(chunk) => chunk.data_offset + chunk.data_size,
+                Entry::List(list) => list.data.offset + list.data.size,
+                Entry::Chunk(chunk) => chunk.data.offset + chunk.data.size,
             };
             children.push(entry);
         }
 
-        Ok(Entry::List(ListMeta {
+        Ok(Entry::List(List::<DataRef> {
             list_type,
-            data_offset,
-            data_size,
+            data: DataRef { offset: data_offset, size: data_size },
             children,
         }))
     }
 
-    fn read_chunk(&self, chunk_id: FourCC, offset: usize, chunk_size: usize) -> Result<Entry> {
+    fn read_chunk(&self, chunk_id: FourCC, offset: usize, chunk_size: usize) -> Result<Entry<DataRef>> {
         // chunk_id chunk_size chunk_data
         //
         // Where chunk_id is a FourCC that identifies the data contained in the chunk,
@@ -189,11 +193,10 @@ impl RiffFile {
 
         let data_size = chunk_size + chunk_size % 2;
 
-        Ok(Entry::Chunk(ChunkMeta {
-            data_offset: offset,
+        Ok(Entry::Chunk(Chunk::<DataRef> {
+            data: DataRef { offset, size: data_size},
             chunk_id,
             chunk_size,
-            data_size,
         }))
     }
 }

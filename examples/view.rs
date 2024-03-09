@@ -5,7 +5,7 @@ use std::io::Result;
 use std::process::exit;
 use std::str;
 
-use riff_io::{Entry, FourCC, RiffFile};
+use riff_io::{Entry, FourCC, RiffFile, DataRef};
 
 fn main() -> Result<()> {
     if env::args().len() < 2 {
@@ -28,14 +28,14 @@ fn main() -> Result<()> {
     Ok(())
 }
 
-fn show_entry(entry: &Entry, indent: usize) -> Result<()> {
+fn show_entry(entry: &Entry<DataRef>, indent: usize) -> Result<()> {
     print!("{}", String::from("  ").repeat(indent));
     match entry {
         Entry::Chunk(chunk) => {
             println!(
                 "CHUNK '{}' offset={} size={}",
                 format_fourcc(&chunk.chunk_id),
-                chunk.data_offset,
+                chunk.data.offset,
                 chunk.chunk_size
             );
         }
