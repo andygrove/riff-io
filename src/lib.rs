@@ -194,22 +194,6 @@ impl RiffFile {
     pub fn file_size(&self) -> usize {
         self.data_size
     }
-
-    fn read_entries(&self) -> Result<Vec<Entry<DataRef>>> {
-        let mut pos = 12;
-        let mut entries = vec![];
-        let end = pos + self.data_size - 4;
-        while pos < end {
-            let (entry, e_end) = self.read_entry(pos)?;
-            pos = e_end;
-            entries.push(entry);
-        }
-        Ok(entries)
-    }
-
-    fn read_bytes(&self, range: Range<usize>) -> &[u8] {
-        &self.mmap[range]
-    }
     
     pub fn bytes(&self) -> &[u8] {
         &self.mmap[..]
