@@ -59,6 +59,7 @@ pub struct List<T> {
 }
 
 impl<T> List<T> where T: Data {
+    /// Actual size in memory, including headers.
     pub fn bytes_len(&self) -> usize {
         12 + self.children.iter().map(Entry::bytes_len).sum::<usize>()
     }
@@ -222,13 +223,13 @@ impl RiffFile {
         let size = parse_size(&header[4..8]) as usize;
 
         if four_cc == LIST {
-            self.read_list(pos, size)
+            self.read_list(four_cc, pos, size)
         } else {
             self.read_chunk(four_cc, pos, size)
         }
     }
 
-    fn read_list(&self, offset: usize, list_size: usize) -> Result<WithEnd<Entry<DataRef>>> {
+    fn read_list(&self, fourcc: FourCC, offset: usize, list_size: usize) -> Result<WithEnd<Entry<DataRef>>> {
         // 'LIST' listSize listType [listData]
 
         // Where 'LIST' is the literal FourCC code 'LIST', list_Size is a 4-byte value giving
@@ -254,7 +255,7 @@ impl RiffFile {
         }
         
         let l = Entry::List(List::<DataRef> {
-                fourcc: *b"LIST",
+                fourcc,
                 list_type,
                 children,
             });
