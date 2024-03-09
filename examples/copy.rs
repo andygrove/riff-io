@@ -24,7 +24,6 @@ fn main() -> Result<()> {
     let toplevel = Entry::<DataOwned>::List(List {
         fourcc: *b"RIFF",
         list_type: *b"AVI ",
-        data: DataOwned(Vec::new()),
         children: entries.into_iter()
             .map(|e| e.to_owned(file.bytes())).collect(),
     });
