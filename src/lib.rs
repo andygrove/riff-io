@@ -25,6 +25,16 @@ pub enum Entry<T> {
     Chunk(Chunk<T>),
 }
 
+impl Entry<DataRef> {
+    pub fn to_owned(self, map: &[u8]) -> Entry<DataOwned> {
+        match self {
+            Entry::List(l) => Entry::List(l.to_owned(map)),
+            Entry::Chunk(c) => Entry::Chunk(c.to_owned(map)),
+        }
+    }
+}
+
+
 /// Meta-data for a list
 #[derive(Debug, Clone)]
 pub struct List<T> {
@@ -35,12 +45,29 @@ pub struct List<T> {
     pub children: Vec<Entry<T>>,
 }
 
+impl List<DataRef> {
+    fn to_owned(self, map: &[u8]) -> List<DataOwned> {
+        List {
+            list_type: self.list_type,
+            children: self.children.into_iter().map(|c| c.to_owned(map)).collect(),
+            data: self.data.to_owned(map),
+        }
+    }
+}
+
 #[derive(Debug, Clone)]
 pub struct DataRef {
     /// offset of data, in bytes
     pub offset: usize,
     /// length of data, in bytes
     pub size: usize,
+}
+
+
+impl DataRef {
+    fn to_owned(self, map: &[u8]) -> DataOwned {
+        DataOwned(map[self.offset..][..self.size].into())
+    }
 }
 
 #[derive(Debug, Clone)]
@@ -55,6 +82,17 @@ pub struct Chunk<T> {
     /// length of chunk, in bytes, which can be smaller than data size due to padding
     pub chunk_size: usize,
 }
+
+impl Chunk<DataRef> {
+    fn to_owned(self, map: &[u8]) -> Chunk<DataOwned> {
+        Chunk {
+            chunk_id: self.chunk_id,
+            chunk_size: self.chunk_size,
+            data: self.data.to_owned(map),
+        }
+    }
+}
+
 
 /// RIFF file
 pub struct RiffFile {
