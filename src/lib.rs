@@ -215,6 +215,10 @@ impl RiffFile {
         &self.mmap[..]
     }
 
+    pub fn read_file(&self) -> Result<Entry<DataRef>> {
+        self.read_entry(0).map(|(e, _)| e)
+    }
+    
     fn read_entry(&self, offset: usize) -> Result<WithEnd<Entry<DataRef>>> {
         // read fourCC and size
         let header = &self.mmap[offset..offset + 8];
@@ -222,7 +226,7 @@ impl RiffFile {
         let four_cc = parse_fourcc(&header[0..4]);
         let size = parse_size(&header[4..8]) as usize;
 
-        if four_cc == LIST {
+        if four_cc == LIST || four_cc == RIFF {
             self.read_list(four_cc, pos, size)
         } else {
             self.read_chunk(four_cc, pos, size)

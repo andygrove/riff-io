@@ -20,11 +20,7 @@ fn main() -> Result<()> {
     println!("File type: {}", format_fourcc(file.file_type()));
     println!("File size: {}", file.file_size());
 
-    let entries = file.read_entries()?;
-    for entry in &entries {
-        show_entry(entry, 0)?;
-    }
-
+    show_entry(&file.read_file()?, 0)?;
     Ok(())
 }
 
@@ -40,7 +36,7 @@ fn show_entry(entry: &Entry<DataRef>, indent: usize) -> Result<()> {
             );
         }
         Entry::List(list) => {
-            println!("LIST '{}', size={}", format_fourcc(&list.list_type), list.bytes_len());
+            println!("{} '{}', size={}", format_fourcc(&list.fourcc), format_fourcc(&list.list_type), list.bytes_len());
             for entry in &list.children {
                 show_entry(entry, indent + 1)?;
             }
