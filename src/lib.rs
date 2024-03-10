@@ -5,7 +5,6 @@ mod writer;
 use std::fs::File;
 use std::io::ErrorKind;
 use std::io::{Error, Result};
-use std::ops::Range;
 
 use memmap2::{Mmap, MmapOptions};
 
@@ -94,7 +93,7 @@ impl Data for DataRef {
 }
 
 impl DataRef {
-    fn to_owned(self, map: &[u8]) -> DataOwned {
+    fn to_owned(&self, map: &[u8]) -> DataOwned {
         DataOwned(map[self.offset..][..self.size].into())
     }
 }
@@ -128,7 +127,10 @@ impl<T: Data> Chunk<T> {
 }
 
 impl Chunk<DataRef> {
-    fn to_owned(self, map: &[u8]) -> Chunk<DataOwned> {
+    pub fn bytes<'a>(&self, map: &'a [u8]) -> &'a[u8] {
+        &map[self.data.offset..][..self.data.size]
+    }
+    pub fn to_owned(&self, map: &[u8]) -> Chunk<DataOwned> {
         Chunk {
             id: self.id,
             chunk_size: self.chunk_size,
