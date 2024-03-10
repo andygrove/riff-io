@@ -12,7 +12,7 @@ use riff_io::{RiffFile, Entry, Chunk, DataRef, DataOwned, List};
 
 fn find_chunk<'a>(
     e: &'a Entry<DataRef>, 
-    pred: &dyn Fn(&Chunk<DataRef>) -> bool,
+    pred: &impl Fn(&Chunk<DataRef>) -> bool,
 ) -> Option<&'a Chunk<DataRef>> {
     match e {
         Entry::Chunk(c) => {
@@ -22,7 +22,7 @@ fn find_chunk<'a>(
                 None
             }
         },
-        Entry::List(l) => l.children.iter().find_map(|e| find_chunk(e, &pred)),
+        Entry::List(l) => l.children.iter().find_map(|e| find_chunk(e, pred)),
     }
 }
 
