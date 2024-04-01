@@ -7,6 +7,10 @@ Rust crate for reading
 as [Audio Video Interleave](https://en.wikipedia.org/wiki/Audio_Video_Interleave) (AVI) 
 and [Waveform Audio File Format](https://en.wikipedia.org/wiki/WAV) (WAV).
 
+## Looking For New Maintainers
+
+I am no longer maintaining this crate and would be happy to transfer it to new maintainers.
+
 ## Features
 
 - Provides access to file metadata containing the file structure (lists and chunks) 
