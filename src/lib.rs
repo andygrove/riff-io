@@ -1,6 +1,5 @@
 #![doc = include_str!("../README.md")]
 
-use std::fs;
 use std::fs::File;
 use std::io::ErrorKind;
 use std::io::{Error, Result};
@@ -65,12 +64,16 @@ pub struct RiffFile {
 
 /// Resource Interchange File Format
 impl RiffFile {
-    /// Open a RIFF file
+    /// Open a RIFF file from a filename
     pub fn open(filename: &str) -> Result<Self> {
         let file = File::open(&filename)?;
-        let metadata = fs::metadata(&filename)?;
+        Self::open_with_file_handle(&file)
+    }
+    /// Open a RIFF file from a `File` handle
+    pub fn open_with_file_handle(file: &File) -> Result<Self> {
+        let metadata = file.metadata()?;
         let len = metadata.len() as usize;
-        let mmap = unsafe { MmapOptions::new().map(&file)? };
+        let mmap = unsafe { MmapOptions::new().map(&*file)? };
 
         let header = &mmap[0..12];
         let four_cc = parse_fourcc(&header[0..4]);
