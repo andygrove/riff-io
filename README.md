@@ -2,7 +2,7 @@
 
 [![crates.io](https://img.shields.io/crates/v/riff-io.svg)](https://crates.io/crates/riff-io)
 
-Rust crate for reading 
+Rust crate for reading and writing
 [Resource Interchange File Format](https://en.wikipedia.org/wiki/Resource_Interchange_File_Format) (RIFF) files, such 
 as [Audio Video Interleave](https://en.wikipedia.org/wiki/Audio_Video_Interleave) (AVI) 
 and [Waveform Audio File Format](https://en.wikipedia.org/wiki/WAV) (WAV).
@@ -17,10 +17,6 @@ I am no longer maintaining this crate and would be happy to transfer it to new m
 - Ability to read bytes from any position in the file
 - Uses memory-mapped files for efficiency.
 - Cross-platform: Tested on Windows, Mac, and Linux. 
-
-## Non Features
- 
-- There is no write support yet although it may be added in the future.
 
 ## Example
 
