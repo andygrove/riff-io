@@ -8,10 +8,10 @@ use std::process::exit;
 
 use std::fs::File;
 
-use riff_io::{RiffFile, Entry, Chunk, DataRef, DataOwned, List};
+use riff_io::{Chunk, DataOwned, DataRef, Entry, List, RiffFile};
 
 fn find_chunk<'a>(
-    e: &'a Entry<DataRef>, 
+    e: &'a Entry<DataRef>,
     pred: &impl Fn(&Chunk<DataRef>) -> bool,
 ) -> Option<&'a Chunk<DataRef>> {
     match e {
@@ -21,7 +21,7 @@ fn find_chunk<'a>(
             } else {
                 None
             }
-        },
+        }
         Entry::List(l) => l.children.iter().find_map(|e| find_chunk(e, pred)),
     }
 }
@@ -52,29 +52,24 @@ fn main() -> Result<()> {
 
     let file = RiffFile::open(&filename_src)?;
     let toplevel = file.read_file()?;
-    let avif_chunk = find_chunk(
-        &toplevel,
-        &|c: &Chunk<DataRef>| {
-            let b = c.bytes(file.bytes());
-            &c.id == b"strd" && &b[..4] == b"AVIF"
-        },
-    ).unwrap();
+    let avif_chunk = find_chunk(&toplevel, &|c: &Chunk<DataRef>| {
+        let b = c.bytes(file.bytes());
+        &c.id == b"strd" && &b[..4] == b"AVIF"
+    })
+    .unwrap();
     let avif_chunk = avif_chunk.to_owned(file.bytes());
     let avif_chunk = Entry::Chunk(avif_chunk);
-    let name_chunk = find_chunk(
-        &toplevel,
-        &|c: &Chunk<DataRef>| {
-            let b = c.bytes(file.bytes());
-            &c.id == b"strn" && &b[..4] == b"FUJI"
-        },
-    ).unwrap();
+    let name_chunk = find_chunk(&toplevel, &|c: &Chunk<DataRef>| {
+        let b = c.bytes(file.bytes());
+        &c.id == b"strn" && &b[..4] == b"FUJI"
+    })
+    .unwrap();
     let name_chunk = name_chunk.to_owned(file.bytes());
     let name_chunk = Entry::Chunk(name_chunk);
-    
-    
+
     let file = RiffFile::open(&filename_base)?;
     let toplevel = file.read_file()?.to_owned(file.bytes());
-    
+
     let new_toplevel = walk(toplevel, &|e| match e {
         Entry::List(l) if &l.list_type == b"strl" => {
             let mut l = l.clone();
@@ -86,7 +81,7 @@ fn main() -> Result<()> {
             match position {
                 Some(p) => {
                     l.children[p] = avif_chunk;
-                },
+                }
                 None => {
                     let pos = l.children.iter().position(|e| match e {
                         Entry::Chunk(c) if &c.id == b"strf" => true,
@@ -94,7 +89,7 @@ fn main() -> Result<()> {
                     });
                     let pos = pos.map(|i| i + 1).unwrap_or(l.children.len());
                     l.children.insert(pos, avif_chunk);
-                },
+                }
             };
             let name_chunk = name_chunk.clone();
             let position = l.children.iter().position(|e| match e {
@@ -104,7 +99,7 @@ fn main() -> Result<()> {
             match position {
                 Some(p) => {
                     l.children[p] = name_chunk;
-                },
+                }
                 None => {
                     let pos = l.children.iter().position(|e| match e {
                         Entry::Chunk(c) if &c.id == b"strd" => true,
@@ -112,15 +107,15 @@ fn main() -> Result<()> {
                     });
                     let pos = pos.map(|i| i + 1).unwrap_or(l.children.len());
                     l.children.insert(pos, name_chunk);
-                },
+                }
             };
             Entry::List(l)
-        },
-         other => other,
+        }
+        other => other,
     });
 
     let mut outfile = File::create(&filename_new)?;
-    
+
     new_toplevel.write(&mut outfile)?;
 
     Ok(())

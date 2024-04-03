@@ -26,7 +26,6 @@ pub enum Entry<T> {
     Chunk(Chunk<T>),
 }
 
-
 impl<T: Data> Entry<T> {
     fn bytes_len(&self) -> usize {
         match self {
@@ -45,7 +44,6 @@ impl Entry<DataRef> {
     }
 }
 
-
 /// Meta-data for a list
 #[derive(Debug, Clone)]
 pub struct List<T> {
@@ -57,7 +55,10 @@ pub struct List<T> {
     pub children: Vec<Entry<T>>,
 }
 
-impl<T> List<T> where T: Data {
+impl<T> List<T>
+where
+    T: Data,
+{
     /// Actual size in memory, including headers.
     pub fn bytes_len(&self) -> usize {
         12 + self.children.iter().map(Entry::bytes_len).sum::<usize>()
@@ -107,7 +108,6 @@ impl Data for DataOwned {
     }
 }
 
-
 /// A chunk of data
 #[derive(Debug, Clone)]
 pub struct Chunk<T> {
@@ -118,7 +118,6 @@ pub struct Chunk<T> {
     pub chunk_size: usize,
 }
 
-
 impl<T: Data> Chunk<T> {
     fn bytes_len(&self) -> usize {
         let s = self.data.size() + 8;
@@ -127,7 +126,7 @@ impl<T: Data> Chunk<T> {
 }
 
 impl Chunk<DataRef> {
-    pub fn bytes<'a>(&self, map: &'a [u8]) -> &'a[u8] {
+    pub fn bytes<'a>(&self, map: &'a [u8]) -> &'a [u8] {
         &map[self.data.offset..][..self.data.size]
     }
     pub fn to_owned(&self, map: &[u8]) -> Chunk<DataOwned> {
@@ -138,7 +137,6 @@ impl Chunk<DataRef> {
         }
     }
 }
-
 
 /// RIFF file
 pub struct RiffFile {
@@ -196,7 +194,7 @@ impl RiffFile {
     pub fn file_size(&self) -> usize {
         self.data_size
     }
-    
+
     pub fn bytes(&self) -> &[u8] {
         &self.mmap[..]
     }
@@ -204,7 +202,7 @@ impl RiffFile {
     pub fn read_file(&self) -> Result<Entry<DataRef>> {
         self.read_entry(0).map(|(e, _)| e)
     }
-    
+
     fn read_entry(&self, offset: usize) -> Result<WithEnd<Entry<DataRef>>> {
         // read fourCC and size
         let header = &self.mmap[offset..offset + 8];
@@ -219,7 +217,12 @@ impl RiffFile {
         }
     }
 
-    fn read_list(&self, fourcc: FourCC, offset: usize, list_size: usize) -> Result<WithEnd<Entry<DataRef>>> {
+    fn read_list(
+        &self,
+        fourcc: FourCC,
+        offset: usize,
+        list_size: usize,
+    ) -> Result<WithEnd<Entry<DataRef>>> {
         // 'LIST' listSize listType [listData]
 
         // Where 'LIST' is the literal FourCC code 'LIST', list_Size is a 4-byte value giving
@@ -243,7 +246,7 @@ impl RiffFile {
             pos = eend;
             children.push(entry);
         }
-        
+
         Ok((
             Entry::List(List::<DataRef> {
                 fourcc,
@@ -254,7 +257,12 @@ impl RiffFile {
         ))
     }
 
-    fn read_chunk(&self, chunk_id: FourCC, offset: usize, chunk_size: usize) -> Result<WithEnd<Entry<DataRef>>> {
+    fn read_chunk(
+        &self,
+        chunk_id: FourCC,
+        offset: usize,
+        chunk_size: usize,
+    ) -> Result<WithEnd<Entry<DataRef>>> {
         // chunk_id chunk_size chunk_data
         //
         // Where chunk_id is a FourCC that identifies the data contained in the chunk,
@@ -270,7 +278,10 @@ impl RiffFile {
 
         Ok((
             Entry::Chunk(Chunk::<DataRef> {
-                data: DataRef { offset, size: data_size},
+                data: DataRef {
+                    offset,
+                    size: data_size,
+                },
                 id: chunk_id,
                 chunk_size,
             }),
